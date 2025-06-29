@@ -119,4 +119,4 @@ Initial release of Salesforce Log Analyzer:
 - ✅ Support for Salesforce debug log format
 - ✅ Performance metrics and statistics
 
-[Download the latest VSIX](https://marketplace.visualstudio.com/_apis/public/gallery/publishers/supercooltools/vsextensions/salesforce-log-analyzer/2.0.0/vspackage)
+[Download the latest VSIX](https://marketplace.visualstudio.com/_apis/public/gallery/publishers/supercooltools/vsextensions/salesforce-log-analyzer/2.0.1/vspackage)
