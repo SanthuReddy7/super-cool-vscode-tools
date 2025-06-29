@@ -1,0 +1,52 @@
+37.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,INFO;SYSTEM,DEBUG;VALIDATION,INFO;VISUALFORCE,INFO;WORKFLOW,INFO
+Execute Anonymous: System.debug('Starting test execution'); Account acc = new Account(Name='Test Account'); insert acc; System.debug('Account created with ID: ' + acc.Id);
+13:05:22.500 (500500500) | EXECUTION_STARTED | 
+13:05:22.501 (501501501) | CODE_UNIT_STARTED | [EXTERNAL] 
+13:05:22.505 (505505505) | USER_INFO | [EXTERNAL] | 005xxxxxxxxx | user@example.com | Pacific Standard Time | GMT-07:00 
+13:05:22.510 (510510510) | EXECUTION_STARTED | 
+13:05:22.515 (515515515) | CODE_UNIT_STARTED | MyComplexService.processOpportunityData() 
+13:05:22.520 (520520520) | SOQL_EXECUTE_BEGIN | | Aggregations:0 | SELECT Id, Name, AccountId, StageName, Amount FROM Opportunity WHERE CloseDate = NEXT_FISCAL_QUARTER LIMIT 200 
+13:05:22.530 (530530530) | SOQL_EXECUTE_END | | Rows:150 
+13:05:22.535 (535535535) | USER_DEBUG | | DEBUG | Opportunities retrieved: 150 
+13:05:22.540 (540540540) | VARIABLE_ASSIGNMENT | | opportunityList | [Opportunity(Id=006xxxxxxx, Name='Opportunity A'), Opportunity(Id=006yyyyyyyy, Name='Opportunity B'), ...] 
+13:05:22.545 (545545545) | HEAP_ALLOCATE | | 3000 
+13:05:22.550 (550550550) | LOOP_OVER | | opportunityList 
+13:05:22.555 (555555555) | VARIABLE_ASSIGNMENT | | currentOpportunity | Opportunity[Id=006xxxxxxx, Name='Opportunity A', AccountId=001xxxxxxx, StageName='Prospecting', Amount=1000.0] 
+13:05:22.560 (560560560) | USER_DEBUG | | INFO | Processing opportunity: Opportunity A 
+13:05:22.565 (565565565) | METHOD_ENTRY | | MyAccountService.getAccountDetails(Id) 
+13:05:22.570 (570570570) | SOQL_EXECUTE_BEGIN | | Aggregations:0 | SELECT Id, Name, AnnualRevenue FROM Account WHERE Id = :accountId 
+13:05:22.575 (575575575) | SOQL_EXECUTE_END | | Rows:1 
+13:05:22.580 (580580580) | METHOD_EXIT | | MyAccountService.getAccountDetails(Id) 
+13:05:22.585 (585585585) | VARIABLE_ASSIGNMENT | | accountDetails | Account[Id=001xxxxxxx, Name='Account X', AnnualRevenue=5000000.0] 
+13:05:22.590 (590590590) | USER_DEBUG | | DEBUG | Account X Annual Revenue: 5000000.0 
+13:05:22.595 (595595595) | DML_BEGIN | | Op:Update | Type:Opportunity 
+13:05:22.600 (600600600) | DML_END | | Rows:1 
+13:05:22.605 (605605605) | VARIABLE_ASSIGNMENT | | currentOpportunity | Opportunity[Id=006yyyyyyyy, Name='Opportunity B', AccountId=001yyyyyyyy, StageName='Qualification', Amount=2500.0] 
+13:05:22.610 (610610610) | USER_DEBUG | | INFO | Processing opportunity: Opportunity B 
+13:05:22.615 (615615615) | METHOD_ENTRY | | MyAccountService.getAccountDetails(Id) 
+13:05:22.620 (620620620) | SOQL_EXECUTE_BEGIN | | Aggregations:0 | SELECT Id, Name, AnnualRevenue FROM Account WHERE Id = :accountId 
+13:05:22.625 (625625625) | SOQL_EXECUTE_END | | Rows:1 
+13:05:22.630 (630630630) | METHOD_EXIT | | MyAccountService.getAccountDetails(Id) 
+13:05:22.635 (635635635) | VARIABLE_ASSIGNMENT | | accountDetails | Account[Id=001yyyyyyyy, Name='Account Y', AnnualRevenue=1000000.0] 
+13:05:22.640 (640640640) | USER_DEBUG | | DEBUG | Account Y Annual Revenue: 1000000.0 
+13:05:22.645 (645645645) | DML_BEGIN | | Op:Update | Type:Opportunity 
+13:05:22.650 (650650650) | DML_END | | Rows:1 
+13:05:22.655 (655655655) | VARIABLE_ASSIGNMENT | | currentOpportunity | Opportunity[Id=006zzzzzzzz, Name='Opportunity C', AccountId=001zzzzzzzz, StageName='Closed Won', Amount=5000.0] 
+13:05:22.660 (660660660) | USER_DEBUG | | INFO | Processing opportunity: Opportunity C 
+13:05:22.665 (665665665) | METHOD_ENTRY | | MyAccountService.getAccountDetails(Id) 
+13:05:22.670 (670670670) | SOQL_EXECUTE_BEGIN | | Aggregations:0 | SELECT Id, Name, AnnualRevenue FROM Account WHERE Id = :accountId 
+13:05:22.675 (675675675) | SOQL_EXECUTE_END | | Rows:0 
+13:05:22.680 (680680680) | METHOD_EXIT | | MyAccountService.getAccountDetails(Id) 
+13:05:22.685 (685685685) | USER_DEBUG | | WARN | Account not found for opportunity: Opportunity C 
+13:05:22.690 (690690690) | EXCEPTION_THROWN | System.NullPointerException: Attempt to de-reference a null object 
+13:05:22.695 (695695695) | DML_BEGIN | | Op:Update | Type:Opportunity 
+13:05:22.700 (700700700) | DML_END | | Rows:0 
+13:05:22.705 (705705705) | LOOP_END | | opportunityList 
+13:05:22.710 (710710710) | HEAP_ALLOCATE | | 500 
+13:05:22.715 (715715715) | CALLOUT_REQUEST | | Method:GET | Endpoint:https://example.com/api/status 
+13:05:22.720 (720720720) | CALLOUT_RESPONSE | | Status:404 | Body:{"error": "Resource not found"} 
+13:05:22.725 (725725725) | USER_DEBUG | | ERROR | Callout failed. Status: 404, Response: {"error": "Resource not found"} 
+13:05:22.730 (730730730) | LIMIT_USAGE_FOR_NS | Namespace=myNamespace | SOQL Queries: 3 out of 100 | DML Statements: 3 out of 150 
+13:05:22.735 (735735735) | CUMULATIVE_LIMIT_USAGE | SOQL Queries: 3 out of 100 | DML Statements: 3 out of 150 
+13:05:22.740 (740740740) | CODE_UNIT_FINISHED | MyComplexService.processOpportunityData() 
+13:05:22.745 (745745745) | EXECUTION_FINISHED | 
