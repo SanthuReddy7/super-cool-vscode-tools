@@ -110,7 +110,7 @@ New features:
 - ✅ Enhanced validation for clipboard content to ensure it's valid Salesforce log format
 - ✅ Improved user feedback with detailed progress messages
 
-### 0.0.1
+### 1.0.0
 
 Initial release of Salesforce Log Analyzer:
 - ✅ Basic log parsing and categorization
@@ -118,3 +118,5 @@ Initial release of Salesforce Log Analyzer:
 - ✅ Intelligent log grouping within categories
 - ✅ Support for Salesforce debug log format
 - ✅ Performance metrics and statistics
+
+[Download the latest VSIX](https://marketplace.visualstudio.com/_apis/public/gallery/publishers/supercooltools/vsextensions/salesforce-log-analyzer/2.0.0/vspackage)

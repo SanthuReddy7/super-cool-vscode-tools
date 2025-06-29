@@ -1,17 +1,21 @@
 {
   "name": "salesforce-log-analyzer",
-  "displayName": "Salesforce Log Analyzer",
+  "displayName": "Salesforce Debug Log Analyzer",
   "description": "Analyze Salesforce debug logs with organized accordion views and grouped log types",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "publisher": "supercooltools",
   "icon": "extension_icon.png",
   "author": {
-    "name": "Santhosh Reddy BasiReddy"
+    "name": "Santhosh Reddy BasiReddy",
+    "url": "https://www.linkedin.com/in/santhosh-reddy-basireddy-077005149/"
   },
   "engines": {
     "vscode": "^1.101.0"
   },
   "categories": [
+    "Debuggers",
+    "Extension Packs",
+    "Visualization",
     "Other"
   ],
   "activationEvents": [],
