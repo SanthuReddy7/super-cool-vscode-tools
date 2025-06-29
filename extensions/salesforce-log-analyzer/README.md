@@ -103,14 +103,14 @@ MIT License © 2025 Santhosh Reddy BasiReddy
 
 ## Release Notes
 
-### 0.1.0
+### 1.0.0
 
 New features:
 - ✅ **Clipboard Analysis**: Analyze Salesforce debug logs directly from clipboard content
 - ✅ Enhanced validation for clipboard content to ensure it's valid Salesforce log format
 - ✅ Improved user feedback with detailed progress messages
 
-### 1.0.0
+### 2.0.0
 
 Initial release of Salesforce Log Analyzer:
 - ✅ Basic log parsing and categorization
@@ -118,5 +118,9 @@ Initial release of Salesforce Log Analyzer:
 - ✅ Intelligent log grouping within categories
 - ✅ Support for Salesforce debug log format
 - ✅ Performance metrics and statistics
+
+### 2.0.1
+
+- ✅ Supports Visual Studio Code version to support 1.85.0 and above
 
 [Download the latest VSIX](https://marketplace.visualstudio.com/_apis/public/gallery/publishers/supercooltools/vsextensions/salesforce-log-analyzer/2.0.1/vspackage)
