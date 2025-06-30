@@ -106,38 +106,57 @@ export class SalesforceLogParser {
     }
 
     private parseLogEntry(line: string): LogEntry | null {
-        // Skip lines that don't contain pipe separators
-        if (!line.includes('|')) {
-            return null;
+        // List of all known Salesforce log event names
+        const KNOWN_EVENT_NAMES = [
+        'USER_INFO', 'EXECUTION_STARTED', 'EXECUTION_FINISHED', 'CUMULATIVE_LIMIT_USAGE', 'CUMULATIVE_LIMIT_USAGE_END', 'LIMIT_USAGE_FOR_NS', 'CODE_UNIT_STARTED',
+        'CODE_UNIT_FINISHED', 'SYSTEM_CONSTRUCTOR_ENTRY', 'SYSTEM_CONSTRUCTOR_EXIT', 'SYSTEM_METHOD_ENTRY', 'SYSTEM_METHOD_EXIT', 'APEX_PROFILING',
+        'STATEMENT_EXECUTE', 'USER_DEBUG', 'CONSTRUCTOR_ENTRY', 'CONSTRUCTOR_EXIT', 'METHOD_ENTRY', 'METHOD_EXIT', 'EXCEPTION_THROWN', 'DML_BEGIN', 'DML_END',
+        'SOQL_EXECUTE_BEGIN', 'SOQL_EXECUTE_END', 'SOSL_EXECUTE_BEGIN', 'SOSL_EXECUTE_END', 'APEX_CODE', 'VF_APEX_CALL_START', 'VF_APEX_CALL_END',
+        'FLOW_START_INTERVIEW', 'FLOW_END_INTERVIEW', 'FLOW_START_INTERVIEW_BEGIN', 'FLOW_START_INTERVIEW_END', 'FLOW_CREATE_INTERVIEW', 'FLOW_ELEMENT_BEGIN',
+        'FLOW_ELEMENT_END', 'FLOW_CREATE_INTERVIEW_BEGIN', 'FLOW_CREATE_INTERVIEW_END', 'DB_BEGIN', 'DB_END', 'DML_INSERT', 'DML_UPDATE', 'DML_DELETE', 'DML_UPSERT', 'DML_UNDELETE',
+        'TRIGGER_STARTED', 'TRIGGER_FINISHED', 'HEAP_ALLOCATE', 'HEAP_DEALLOCATE', 'VALIDATION_RULE', 'VALIDATION_PASS', 'VALIDATION_FAIL', 'WORKFLOW',
+        'WF_RULE_EVAL_BEGIN', 'WF_RULE_EVAL_END', 'WF_CRITERIA_BEGIN', 'WF_CRITERIA_END', 'WF_ACTIONS_BEGIN', 'WF_ACTIONS_END', 'WF_TASK', 'WF_EMAIL_ALERT', 'WF_FIELD_UPDATE',
+        'WF_OUTBOUND_MESSAGE', 'WF_TIME_TRIGGER', 'WF_APPROVAL', 'WF_STEP', 'WF_STEP_APPROVER', 'WF_ALERT', 'CALLOUT_REQUEST', 'CALLOUT_RESPONSE', 'WEB_SERVICE', 'WEB_SERVICE_RESPONSE',
+        'STATIC_RESOURCE_BEGIN', 'STATIC_RESOURCE_END', 'VF_DESERIALIZE_VIEWSTATE_BEGIN', 'VF_DESERIALIZE_VIEWSTATE_END', 'VF_SERIALIZE_VIEWSTATE_BEGIN', 'VF_SERIALIZE_VIEWSTATE_END',
+        'PLATFORM_EVENT_PUBLISH', 'PLATFORM_EVENT_CONSUME', 'FATAL_ERROR', 'DUPLICATE_DETECTION_BEGIN', 'DUPLICATE_DETECTION_END'
+        ];
+
+        // Find first event name in the line
+        const EVENT_NAME_REGEX = new RegExp(`\\b(${KNOWN_EVENT_NAMES.join('|')})\\b`);
+        const eventMatch = line.match(EVENT_NAME_REGEX);
+        if (!eventMatch) return null;
+
+        const eventIdentifier = eventMatch[1].toUpperCase();
+        const idx = line.indexOf(eventIdentifier);
+
+        // --- Get what's before event for time/nano extraction ---
+        const preEvent = line.substring(0, idx).trim();
+
+        // Try to extract timestamp/nanoseconds from preEvent
+        let timestamp = '';
+        let nanoseconds = 0;
+        const tsMatch = preEvent.match(/(\d{2}:\d{2}:\d{2}\.\d{1,3})\s*\((\d+)\)/);
+        if (tsMatch) {
+            timestamp = tsMatch[1];
+            nanoseconds = parseInt(tsMatch[2], 10);
         }
 
-        const parts = line.split('|');
-        if (parts.length < 2) {
-            return null;
-        }
-
-        // Extract timestamp and nanoseconds
-        const timestampPart = parts[0].trim();
-        const timestampMatch = timestampPart.match(/^(\d{2}:\d{2}:\d{2}\.\d{3})\s*\((\d+)\)$/);
-        
-        if (!timestampMatch) {
-            return null;
-        }
-
-        const timestamp = timestampMatch[1];
-        const nanoseconds = parseInt(timestampMatch[2], 10);
-        const eventIdentifier = parts[1].trim();
-        const additionalInfo = parts.slice(2).map(part => part.trim());
+        // --- After event: additional info ---
+        let afterEvent = line.substring(idx + eventIdentifier.length);
+        afterEvent = afterEvent.replace(/^[\[\|\s]*/, '');
+        const additionalInfo = afterEvent.length
+            ? afterEvent.split('|').map(s => s.trim()).filter(Boolean)
+            : [];
 
         const entry: LogEntry = {
             timestamp,
-            nanoseconds,
+            nanoseconds,  // Always a number!
             eventIdentifier,
             additionalInfo,
             rawLine: line
         };
 
-        // Parse specific event types for additional information
+        // Optional: further parsing...
         if (eventIdentifier === 'USER_DEBUG' && additionalInfo.length >= 3) {
             entry.lineNumber = this.extractLineNumber(additionalInfo[0]);
             entry.logLevel = additionalInfo[1];
@@ -148,6 +167,8 @@ export class SalesforceLogParser {
 
         return entry;
     }
+
+
 
     private extractLineNumber(lineInfo: string): number | undefined {
         const match = lineInfo.match(/\[(\d+)\]/);
