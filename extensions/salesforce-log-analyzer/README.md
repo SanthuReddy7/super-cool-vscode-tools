@@ -123,4 +123,11 @@ Initial release of Salesforce Log Analyzer:
 
 - ✅ Supports Visual Studio Code version to support 1.85.0 and above
 
-[Download the latest VSIX](https://marketplace.visualstudio.com/_apis/public/gallery/publishers/supercooltools/vsextensions/salesforce-log-analyzer/2.0.1/vspackage)
+### 2.0.2
+BUG FIXES: 
+- ✅ Log with spaces and | handle correctly, Dynamically searching the log type and assigning to the groups. 
+FEATURE: 
+- ✅ Added hyper link to the log , if user wants to open the actual line before grouping. 
+- ✅ Added Log Time and View Time , helps users know when the log file is generated and when it is viewd by user. 
+
+[Download the latest VSIX](https://marketplace.visualstudio.com/_apis/public/gallery/publishers/supercooltools/vsextensions/salesforce-log-analyzer/2.0.2/vspackage)
