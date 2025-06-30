@@ -8,6 +8,10 @@ export class LogViewProvider implements vscode.WebviewViewProvider {
     private _view?: vscode.WebviewView;
     private _parsedLog?: ParsedLog;
     private _fileName?: string;
+    private _filePath?: string;
+    private _logDatetime?: string;
+    private _viewedDate?: string;
+
     private _context?: vscode.ExtensionContext;
 
     constructor(private readonly _extensionUri: vscode.Uri, context?: vscode.ExtensionContext) {
@@ -20,103 +24,126 @@ export class LogViewProvider implements vscode.WebviewViewProvider {
         this._context = context;
     }
 
-public resolveWebviewView(
-    webviewView: vscode.WebviewView,
-    context: vscode.WebviewViewResolveContext,
-    _token: vscode.CancellationToken,
-) {
-    this._view = webviewView;
+    public resolveWebviewView(
+        webviewView: vscode.WebviewView,
+        context: vscode.WebviewViewResolveContext,
+        _token: vscode.CancellationToken,
+    ) {
+        this._view = webviewView;
 
-    webviewView.webview.options = {
-        enableScripts: true,
-        localResourceRoots: [this._extensionUri]
-    };
+        webviewView.webview.options = {
+            enableScripts: true,
+            localResourceRoots: [this._extensionUri]
+        };
 
-    webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+        webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-    // Listen for webview messages
-    webviewView.webview.onDidReceiveMessage(
-        async (message) => {
-            switch (message.type) {
-                case 'toggleAccordion':
-                    this._handleToggleAccordion(message.categoryType);
-                    break;
-                case 'showLogEntry':
-                    this._handleShowLogEntry(message.entryIndex, message.categoryType, message.groupType);
-                    break;
-                case 'deleteLog':
-                    await this._deleteCurrentLog();
-                    break;
-                case 'requestLogData':
-                    this._sendCurrentLogToWebview();
-                    break;
-            }
-        },
-        undefined,
-        []
-    );
+        webviewView.webview.onDidReceiveMessage(
+            async (message) => {
+                switch (message.type) {
+                    case 'toggleAccordion':
+                        this._handleToggleAccordion(message.categoryType);
+                        break;
+                    case 'showLogEntry':
+                        this._handleShowLogEntry(message.entryIndex, message.categoryType, message.groupType);
+                        break;
+                    case 'deleteLog':
+                        await this._deleteCurrentLog();
+                        break;
+                    case 'requestLogData':
+                        this._sendCurrentLogToWebview();
+                        break;
+                    case 'openLogFile':
+                        if (message.filePath) {
+                            const fileUri = vscode.Uri.file(message.filePath);
+                            try {
+                                await vscode.window.showTextDocument(fileUri);
+                            } catch (e) {
+                                vscode.window.showWarningMessage('Could not open log file: ' + e);
+                            }
+                        }
+                        break;
+                }
+            },
+            undefined,
+            []
+        );
 
-    // Always restore current log (if any) when webview is resolved
-    this._restoreCurrentLog();
-}
+        this._restoreCurrentLog();
+    }
 
-private _restoreCurrentLog() {
-    if (this._context) {
-        const savedLog = this._context.globalState.get<{ name: string; content: string }>('currentLog');
-        if (savedLog) {
-            const parser = new SalesforceLogParser();
-            const parsedLog = parser.parseLog(savedLog.content);
-            this._parsedLog = parsedLog;             // Save in memory for entry viewing
-            this._fileName = savedLog.name;
-            this.updateLogData(parsedLog, savedLog.name);
-        } else {
-            // Clear view if no log
-            if (this._view) {
-                this._view.webview.postMessage({ type: 'clearLog' });
+    private _restoreCurrentLog() {
+        if (this._context) {
+            const savedLog = this._context.globalState.get<{ name: string; content: string; path?: string, logDatetime?: string, viewed?: string }>('currentLog');
+            if (savedLog) {
+                const parser = new SalesforceLogParser();
+                const parsedLog = parser.parseLog(savedLog.content);
+                this._parsedLog = parsedLog;
+                this._fileName = savedLog.name;
+                this._filePath = savedLog.path;
+                this._logDatetime = savedLog.logDatetime;
+                this._viewedDate = savedLog.viewed;
+                this.updateLogData(parsedLog, savedLog.name, savedLog.path, savedLog.logDatetime, savedLog.viewed);
+            } else {
+                if (this._view) {
+                    this._view.webview.postMessage({ type: 'clearLog' });
+                }
             }
         }
     }
-}
 
-
-    // Persisted "delete" action: wipes log from UI and from globalState
     private async _deleteCurrentLog() {
         if (this._context) {
             await this._context.globalState.update('currentLog', undefined);
         }
         this._parsedLog = undefined;
         this._fileName = undefined;
+        this._filePath = undefined;
+        this._logDatetime = undefined;
+        this._viewedDate = undefined;
         if (this._view) {
             this._view.webview.postMessage({ type: 'clearLog' });
         }
     }
 
-    public updateLogData(parsedLog: ParsedLog, fileName: string) {
+    public extractFirstTimestamp(logContent: string): string | undefined {
+        const line = logContent.split('\n').find(l => /^\d{2}:\d{2}:\d{2}\.\d{1,3}/.test(l));
+        if (!line) return undefined;
+        const m = line.match(/^(\d{2}:\d{2}:\d{2}\.\d{1,3})/);
+        return m ? m[1] : undefined;
+    }
+
+    public updateLogData(parsedLog: ParsedLog, fileName: string, filePath?: string, logDatetime?: string, viewed?: string) {
         this._parsedLog = parsedLog;
         this._fileName = fileName;
+        this._filePath = filePath;
+        this._logDatetime = logDatetime;
+        this._viewedDate = viewed;
 
         if (this._view) {
             this._view.webview.postMessage({
                 type: 'updateLogData',
                 data: {
                     parsedLog: this._serializeParsedLog(parsedLog),
-                    fileName
+                    fileName,
+                    filePath,
+                    logDatetime,
+                    viewed
                 }
             });
         }
     }
 
     private _handleToggleAccordion(categoryType: string) {
-        // (Optional: add stateful accordion support if you want)
         console.log(`Toggling accordion for category: ${categoryType}`);
     }
 
     private _handleShowLogEntry(entryIndex: number, categoryType: string, groupType: string) {
-        if (!this._parsedLog) {return;};
+        if (!this._parsedLog) { return; };
         const category = this._parsedLog.categories.get(categoryType as LogCategoryType);
-        if (!category) {return;};
+        if (!category) { return; };
         const group = category.groups.find(g => g.type === groupType);
-        if (!group || entryIndex >= group.entries.length) {return;};
+        if (!group || entryIndex >= group.entries.length) { return; };
         const entry = group.entries[entryIndex];
         vscode.workspace.openTextDocument({
             content: entry.rawLine,
@@ -127,28 +154,37 @@ private _restoreCurrentLog() {
     }
 
     private _sendCurrentLogToWebview() {
-        if (!this._view) {return;};
+        if (!this._view) { return; };
         if (this._parsedLog && this._fileName) {
             this._view.webview.postMessage({
                 type: 'updateLogData',
                 data: {
                     parsedLog: this._serializeParsedLog(this._parsedLog),
-                    fileName: this._fileName
+                    fileName: this._fileName,
+                    filePath: this._filePath,
+                    logDatetime: this._logDatetime,
+                    viewed: this._viewedDate
                 }
             });
         } else if (this._context) {
-            // Fallback: Try loading from globalState
-            const savedLog = this._context.globalState.get<{ name: string; content: string }>('currentLog');
+            const savedLog = this._context.globalState.get<{ name: string; content: string; path?: string, logDatetime?: string, viewed?: string }>('currentLog');
             if (savedLog) {
                 const parser = new SalesforceLogParser();
                 const parsedLog = parser.parseLog(savedLog.content);
                 this._parsedLog = parsedLog;
                 this._fileName = savedLog.name;
+                this._filePath = savedLog.path;
+                this._logDatetime = savedLog.logDatetime;
+                this._viewedDate = savedLog.viewed;
+
                 this._view.webview.postMessage({
                     type: 'updateLogData',
                     data: {
                         parsedLog: this._serializeParsedLog(parsedLog),
-                        fileName: savedLog.name
+                        fileName: savedLog.name,
+                        filePath: savedLog.path,
+                        logDatetime: savedLog.logDatetime,
+                        viewed: savedLog.viewed
                     }
                 });
             } else {
@@ -156,7 +192,6 @@ private _restoreCurrentLog() {
             }
         }
     }
-
 
     private _serializeParsedLog(parsedLog: ParsedLog): any {
         const serialized = {
@@ -251,6 +286,10 @@ private _restoreCurrentLog() {
         .accordion-header:hover {
             background-color: var(--vscode-list-activeSelectionBackground);
         }
+        .accordion-header:hover .accordion-title {
+            color: #FFFFFF !important;       /* Hover text: black */
+            font-weight: bold !important; /* Hover text: bold */
+        }
 
         .accordion-header.active {
             background-color: var(--vscode-list-activeSelectionBackground);
@@ -278,6 +317,11 @@ private _restoreCurrentLog() {
 
         .accordion-header.active .accordion-icon {
             transform: rotate(90deg);
+        }
+        
+         .accordion-header.active .accordion-title {
+            color: #FFFFFF !important;       /* Hover text: black */
+            font-weight: bold !important; /* Hover text: bold */
         }
 
         .accordion-content {
@@ -329,7 +373,7 @@ private _restoreCurrentLog() {
 
         .log-group-count {
             background-color: var(--vscode-inputValidation-infoBorder);
-            color: var(--vscode-inputValidation-infoForeground);
+            color: #FFFFFF !important;       /* Hover text: black */
             padding: 1px 6px;
             border-radius: 8px;
             font-size: 10px;
@@ -433,7 +477,7 @@ private _restoreCurrentLog() {
     </div>
     <script>
         const vscode = acquireVsCodeApi();
-        vscode.postMessage({ type: 'requestLogData' }); // 👈 Add this immediately after acquireVsCodeApi()
+        vscode.postMessage({ type: 'requestLogData' });
 
         let currentLogData = null;
 
@@ -461,7 +505,7 @@ private _restoreCurrentLog() {
 
         function renderLogData(data) {
             const app = document.getElementById('app');
-            const { parsedLog, fileName } = data;
+            const { parsedLog, fileName, filePath, logDatetime, viewed } = data;
 
             if (!parsedLog || parsedLog.totalEntries === 0) {
                 app.innerHTML = \`
@@ -479,7 +523,15 @@ private _restoreCurrentLog() {
 
             app.innerHTML = \`
                 <div class="header">
-                    <h2>📊 \${fileName}</h2>
+                    <h2>
+                      📊 
+                      \${filePath
+                        ? '<span id="fileNameLink" style="cursor:pointer;color:#0066cc;text-decoration:underline;">' + fileName + '</span>'
+                        : fileName
+                      }
+                    </h2>
+                    \${logDatetime ? '<div style="margin-bottom:4px;"><strong>Log Time:</strong> ' + logDatetime + '</div>' : ''}
+                    \${viewed ? '<div style="margin-bottom:8px;"><strong>Viewed:</strong> ' + viewed + '</div>' : ''}
                     <button id="deleteLogBtn" title="Delete Log" style="float:right;font-size:1.2em;">🗑️</button>
                     <div class="summary">
                         <div>📈 Total Entries: <strong>\${parsedLog.totalEntries.toLocaleString()}</strong></div>
@@ -535,6 +587,14 @@ private _restoreCurrentLog() {
             \`;
 
             document.getElementById('deleteLogBtn').onclick = () => vscode.postMessage({ type: 'deleteLog' });
+
+            // Add file open handler
+            if (filePath) {
+                const fileNameLink = document.getElementById('fileNameLink');
+                if (fileNameLink) {
+                    fileNameLink.onclick = () => vscode.postMessage({ type: 'openLogFile', filePath });
+                }
+            }
         }
 
         // Accordion logic

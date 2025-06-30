@@ -26,7 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
                 openLabel: 'Select Salesforce Debug Log'
             });
 
-            if (!fileUri || fileUri.length === 0) {return;};
+            if (!fileUri || fileUri.length === 0) { return; }
             const logFilePath = fileUri[0].fsPath;
 
             await vscode.window.withProgress({
@@ -42,11 +42,17 @@ export function activate(context: vscode.ExtensionContext) {
                 const parsedLog = logParser.parseLog(logContent);
                 progress.report({ increment: 90, message: "Generating analysis view..." });
 
-                // Update view and persist log
-                logViewProvider.updateLogData(parsedLog, path.basename(logFilePath));
+                const logDatetime = logViewProvider.extractFirstTimestamp(logContent); // <---- new
+                const viewed = new Date().toISOString().split('T')[0];
+
+                // Update view and persist log (SAVE PATH, LOG TIME, VIEWED!)
+                logViewProvider.updateLogData(parsedLog, path.basename(logFilePath), logFilePath, logDatetime, viewed);
                 await context.globalState.update('currentLog', {
                     name: path.basename(logFilePath),
-                    content: logContent
+                    content: logContent,
+                    path: logFilePath,
+                    logDatetime: logDatetime,
+                    viewed: viewed
                 });
 
                 progress.report({ increment: 100, message: "Analysis complete!" });
@@ -82,12 +88,26 @@ export function activate(context: vscode.ExtensionContext) {
 
                 const parsedLog = logParser.parseLog(logContent);
                 progress.report({ increment: 90, message: "Generating analysis view..." });
-                logViewProvider.updateLogData(parsedLog, path.basename(document.fileName));
+                const logDatetime = logViewProvider.extractFirstTimestamp(logContent); // <---- new
+                const viewed = new Date().toISOString().split('T')[0];
 
-                // Persist log
+                // Use document.fileName as filePath if the file is saved, otherwise undefined
+                const isUntitled = document.isUntitled || !document.fileName;
+                logViewProvider.updateLogData(
+                    parsedLog,
+                    path.basename(document.fileName),
+                    !isUntitled ? document.fileName : undefined,
+                    logDatetime,
+                    viewed
+                );
+
+                // Persist log (add file path if not untitled)
                 await context.globalState.update('currentLog', {
                     name: path.basename(document.fileName),
-                    content: logContent
+                    content: logContent,
+                    path: !isUntitled ? document.fileName : undefined,
+                    logDatetime: logDatetime,
+                    viewed: viewed
                 });
 
                 progress.report({ increment: 100, message: "Analysis complete!" });
@@ -129,12 +149,17 @@ export function activate(context: vscode.ExtensionContext) {
                 }
 
                 progress.report({ increment: 90, message: "Generating analysis view..." });
-                logViewProvider.updateLogData(parsedLog, 'Clipboard Content');
+                const logDatetime = logViewProvider.extractFirstTimestamp(clipboardContent);
+                const viewed = new Date().toISOString().split('T')[0];
 
-                // Persist log
+                logViewProvider.updateLogData(parsedLog, 'Clipboard Content', undefined, logDatetime, viewed);
+
+                // Persist log (no file path)
                 await context.globalState.update('currentLog', {
                     name: 'Clipboard Content',
-                    content: clipboardContent
+                    content: clipboardContent,
+                    logDatetime: logDatetime,
+                    viewed: viewed
                 });
 
                 progress.report({ increment: 100, message: "Analysis complete!" });
