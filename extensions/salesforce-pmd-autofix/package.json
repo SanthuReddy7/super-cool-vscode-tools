@@ -1,0 +1,130 @@
+{
+  "name": "salesforce-pmd-autofix",
+  "displayName": "Salesforce PMD Autofix",
+  "description": "Automatically fix PMD static code analysis violations in your Salesforce Apex code. Quickly resolve unused variables, empty catch blocks, and CRUD/FLS violations directly from the sidebar.",
+  "version": "0.0.1",
+  "icon":"pmd2.png",
+   "publisher": "supercooltools",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "activationEvents": [ 
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+      "configuration": {
+    "properties": {
+      "apexScaAutofix.pmdPath": {
+        "type": "string",
+        "default": "pmd",
+        "description": "Path to the PMD CLI executable (e.g., 'pmd' if added to PATH or full path like 'C:\\tools\\pmd\\bin\\pmd.bat')."
+      }
+    }
+  },
+    "commands": [
+      {
+        "command": "salesforce-pmd-autofix.runSca",
+        "title": "Run SCA Analysis",
+        "category": "Apex SCA Autofix"
+      },
+      {
+        "command": "salesforce-pmd-autofix.fixViolation",
+        "title": "Fix Violation",
+        "category": "Apex SCA Autofix"
+      },
+      {
+        "command": "salesforce-pmd-autofix.fixAllViolations",
+        "title": "Fix All Violations",
+        "category": "Apex SCA Autofix"
+      },
+      {
+        "command": "salesforce-pmd-autofix.fixAllOfType",
+        "title": "Fix All Violations of Type",
+        "category": "Apex SCA Autofix"
+      },
+      {
+        "command": "salesforce-pmd-autofix.selectRuleset",
+        "title": "Select Custom Ruleset",
+        "category": "Apex SCA Autofix"
+      },
+      {
+        "command": "salesforce-pmd-autofix.contextFixViolation",
+        "title": "SCA: Fix Violation at Cursor",
+        "category": "Apex SCA Autofix"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "apexScaAutofix",
+          "title": "Apex SCA Autofix",
+          "icon":"sidebar.png"
+        }
+      ]
+    },
+    "views": {
+      "apexScaAutofix": [
+        {
+          "type": "webview",
+          "id": "apexScaAutofix.sidebar",
+          "name": "SCA Violations",
+          "icon":"sidebar.png"
+        }
+      ]
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "salesforce-pmd-autofix.runSca",
+          "when": "resourceExtname == .cls || resourceExtname == .apex"
+        },
+        {
+          "command": "salesforce-pmd-autofix.fixAllViolations",
+          "when": "resourceExtname == .cls || resourceExtname == .apex"
+        },
+        {
+          "command": "salesforce-pmd-autofix.selectRuleset"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "salesforce-pmd-autofix.runSca",
+          "when": "resourceExtname == .cls || resourceExtname == .apex",
+          "group": "salesforce-pmd-autofix"
+        },
+        {
+          "command": "salesforce-pmd-autofix.contextFixViolation",
+          "when": "resourceExtname == .cls || resourceExtname == .apex",
+          "group": "salesforce-pmd-autofix"
+        }
+      ]
+    }
+  },
+
+
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "eslint": "^9.25.1",
+    "typescript": "^5.8.3",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}
+
