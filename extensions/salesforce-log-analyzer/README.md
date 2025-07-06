@@ -130,4 +130,12 @@ FEATURE:
 - ✅ Added hyper link to the log , if user wants to open the actual line before grouping. 
 - ✅ Added Log Time and View Time , helps users know when the log file is generated and when it is viewd by user. 
 
-[Download the latest VSIX](https://marketplace.visualstudio.com/_apis/public/gallery/publishers/supercooltools/vsextensions/salesforce-log-analyzer/2.0.2/vspackage)
+### 2.0.3
+BUG FIXES: 
+- ✅ updated an issue with logs, where few longs are not displayed in accordian 
+FEATURE: 
+- ✅ hyperlink fix 
+- ✅ updated grouping for easy access
+
+
+[Download the latest VSIX](https://marketplace.visualstudio.com/_apis/public/gallery/publishers/supercooltools/vsextensions/salesforce-log-analyzer/2.0.3/vspackage)
