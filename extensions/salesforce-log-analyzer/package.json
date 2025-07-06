@@ -2,7 +2,7 @@
   "name": "salesforce-log-analyzer",
   "displayName": "Salesforce Debug Log Analyzer",
   "description": "Analyze Salesforce debug logs with organized accordion views and grouped log types",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "publisher": "supercooltools",
   "icon": "extension_icon.png",
   "author": {
@@ -48,7 +48,7 @@
         {
           "id": "salesforceLogAnalyzer",
           "title": "Salesforce Log Analyzer",
-          "icon": "sidebar_icon.png"   
+          "icon": "sidebar12.png"   
         }
       ]
     },
