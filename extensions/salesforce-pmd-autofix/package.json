@@ -2,7 +2,7 @@
   "name": "salesforce-pmd-autofix",
   "displayName": "Salesforce PMD Autofix",
   "description": "Automatically fix PMD static code analysis violations in your Salesforce Apex code. Quickly resolve unused variables, empty catch blocks, and CRUD/FLS violations directly from the sidebar.",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "icon":"pmd2.png",
    "publisher": "supercooltools",
   "engines": {
